@@ -4,7 +4,7 @@ BIN := siggi
 .PHONY: all
 all: $(BIN)
 
-$(BIN): $(shell find src -name '*.go')
+$(BIN): $(shell find src -name '*.go') deps
 	go build $(BIN)
 
 .PHONY: deps

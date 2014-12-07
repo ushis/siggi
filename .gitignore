@@ -1,0 +1,11 @@
+# Vim
+*.swo
+*.swp
+
+# Binaries
+/siggi
+/pkg
+
+# Dependencies
+/src/code.google.com
+/src/golang.org

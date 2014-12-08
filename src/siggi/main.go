@@ -2,7 +2,7 @@ package main
 
 import (
 	"flag"
-	"log"
+	"fmt"
 	"net"
 	"net/http"
 	"os"
@@ -27,7 +27,8 @@ func main() {
 	listener, err := listen()
 
 	if err != nil {
-		log.Fatalln(err)
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
 	}
 	defer listener.Close()
 

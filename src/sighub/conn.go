@@ -2,9 +2,10 @@ package sighub
 
 import (
 	"code.google.com/p/go-uuid/uuid"
+	"fmt"
 	"golang.org/x/net/websocket"
 	"io"
-	"log"
+	"os"
 )
 
 type Conn struct {
@@ -29,7 +30,7 @@ func (c *Conn) Run() {
 		case err == io.EOF:
 			return
 		case err != nil:
-			log.Println(err)
+			fmt.Fprintln(os.Stderr, err)
 		default:
 			msg.From = c.id
 			c.hub <- msg

@@ -1,8 +1,9 @@
 package sighub
 
 import (
+	"fmt"
 	"golang.org/x/net/websocket"
-	"log"
+	"os"
 )
 
 type Hub struct {
@@ -74,7 +75,7 @@ func (h *Hub) broadcast(msg *Message) {
 func (h *Hub) sendTo(id string, msg *Message) {
 	if conn, ok := h.conns[id]; ok {
 		if err := conn.Send(msg); err != nil {
-			log.Println(err)
+			fmt.Fprintln(os.Stderr, err)
 		}
 	}
 }

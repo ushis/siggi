@@ -11,11 +11,10 @@ type Conn struct {
 	*websocket.Conn
 	id  string
 	hub chan *Message
-	die chan string
 }
 
-func NewConn(conn *websocket.Conn, hub chan *Message, die chan string) *Conn {
-	return &Conn{conn, uuid.New(), hub, die}
+func NewConn(conn *websocket.Conn, hub chan *Message) *Conn {
+	return &Conn{conn, uuid.New(), hub}
 }
 
 func (c *Conn) Send(msg *Message) error {
@@ -28,7 +27,6 @@ func (c *Conn) Run() {
 
 		switch err := websocket.JSON.Receive(c.Conn, msg); {
 		case err == io.EOF:
-			c.die <- c.id
 			return
 		case err != nil:
 			log.Println(err)

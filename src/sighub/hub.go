@@ -9,7 +9,7 @@ type Hub struct {
 	conns map[string]*Conn
 	msg   chan *Message
 	reg   chan *Conn
-	rm    chan string
+	rm    chan *Conn
 	die   chan int
 }
 
@@ -18,7 +18,7 @@ func New() *Hub {
 		make(map[string]*Conn),
 		make(chan *Message),
 		make(chan *Conn),
-		make(chan string),
+		make(chan *Conn),
 		make(chan int),
 	}
 }
@@ -30,8 +30,8 @@ func (h *Hub) Run() {
 			h.recv(msg)
 		case conn := <-h.reg:
 			h.conns[conn.id] = conn
-		case id := <-h.rm:
-			h.closeConn(id)
+		case conn := <-h.rm:
+			h.closeConn(conn)
 		case <-h.die:
 			h.shutdown()
 			return
@@ -48,9 +48,10 @@ func (h *Hub) HTTPHandler() websocket.Handler {
 }
 
 func (h *Hub) connect(conn *websocket.Conn) {
-	c := NewConn(conn, h.msg, h.rm)
+	c := NewConn(conn, h.msg)
 	h.reg <- c
 	c.Run()
+	h.rm <- c
 }
 
 func (h *Hub) recv(msg *Message) {
@@ -71,27 +72,24 @@ func (h *Hub) broadcast(msg *Message) {
 }
 
 func (h *Hub) sendTo(id string, msg *Message) {
-	conn, ok := h.conns[id]
-
-	if !ok {
-		log.Printf("Invalid recipient id: %s\n", id)
-		return
-	}
-
-	if err := conn.Send(msg); err != nil {
-		log.Println(err)
+	if conn, ok := h.conns[id]; ok {
+		if err := conn.Send(msg); err != nil {
+			log.Println(err)
+		}
 	}
 }
 
-func (h *Hub) closeConn(id string) {
-	h.conns[id].Close()
-	delete(h.conns, id)
+func (h *Hub) closeConn(conn *Conn) {
+	conn.Close()
+	delete(h.conns, conn.id)
 }
 
 func (h *Hub) shutdown() {
-	for id := range h.conns {
-		h.closeConn(id)
+	for _, conn := range h.conns {
+		h.closeConn(conn)
 	}
 	close(h.msg)
+	close(h.reg)
+	close(h.rm)
 	close(h.die)
 }

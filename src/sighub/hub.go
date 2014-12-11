@@ -49,7 +49,7 @@ func (h *Hub) HTTPHandler() websocket.Handler {
 }
 
 func (h *Hub) connect(conn *websocket.Conn) {
-	c := NewConn(conn, h.msg)
+	c := NewConn(conn, conn.Config().Location.Query().Get("room"), h.msg)
 	h.reg <- c
 	c.Run()
 	h.rm <- c
@@ -65,15 +65,15 @@ func (h *Hub) recv(msg *Message) {
 }
 
 func (h *Hub) broadcast(msg *Message) {
-	for id := range h.conns {
-		if id != msg.From {
+	for id, conn := range h.conns {
+		if msg.Room == conn.room && id != msg.From {
 			h.sendTo(id, msg)
 		}
 	}
 }
 
 func (h *Hub) sendTo(id string, msg *Message) {
-	if conn, ok := h.conns[id]; ok {
+	if conn, ok := h.conns[id]; ok && conn.room == msg.Room {
 		if err := conn.Send(msg); err != nil {
 			fmt.Fprintln(os.Stderr, err)
 		}

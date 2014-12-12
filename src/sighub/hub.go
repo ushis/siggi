@@ -5,7 +5,7 @@ import (
 )
 
 type Hub struct {
-	rooms map[string]map[string]*Conn
+	rooms map[string]Room
 	msg   chan *Message
 	reg   chan *Conn
 	rm    chan *Conn
@@ -14,7 +14,7 @@ type Hub struct {
 
 func New() *Hub {
 	return &Hub{
-		make(map[string]map[string]*Conn),
+		make(map[string]Room),
 		make(chan *Message),
 		make(chan *Conn),
 		make(chan *Conn),
@@ -54,62 +54,37 @@ func (h *Hub) connect(conn *websocket.Conn) {
 }
 
 func (h *Hub) register(conn *Conn) {
-	room, ok := h.rooms[conn.room]
+	room, ok := h.rooms[conn.roomId]
 
 	if !ok {
-		room = make(map[string]*Conn)
-		h.rooms[conn.room] = room
+		room = NewRoom()
+		h.rooms[conn.roomId] = room
 	}
-	room[conn.id] = conn
+	room.Add(conn)
 }
 
 func (h *Hub) recv(msg *Message) {
-	if len(msg.To) > 0 {
-		h.send(msg)
-	} else {
-		h.broadcast(msg)
+	if room, ok := h.rooms[msg.Room]; ok {
+		room.Send(msg)
 	}
 	msg.Free()
-}
-
-func (h *Hub) broadcast(msg *Message) {
-	if room, ok := h.rooms[msg.Room]; ok {
-		for id, conn := range room {
-			if id != msg.From {
-				conn.Send(msg)
-			}
-		}
-	}
-}
-
-func (h *Hub) send(msg *Message) {
-	if room, ok := h.rooms[msg.Room]; ok {
-		if conn, ok := room[msg.To]; ok {
-			conn.Send(msg)
-		}
-	}
 }
 
 func (h *Hub) closeConn(conn *Conn) {
 	conn.Close()
 
-	room, ok := h.rooms[conn.room]
+	if room, ok := h.rooms[conn.roomId]; ok {
+		room.Rm(conn)
 
-	if !ok {
-		return
-	}
-	delete(room, conn.id)
-
-	if len(room) == 0 {
-		delete(h.rooms, conn.room)
+		if room.Len() == 0 {
+			delete(h.rooms, conn.roomId)
+		}
 	}
 }
 
 func (h *Hub) shutdown() {
 	for _, room := range h.rooms {
-		for _, conn := range room {
-			h.closeConn(conn)
-		}
+		room.Each(h.closeConn)
 	}
 	close(h.msg)
 	close(h.reg)

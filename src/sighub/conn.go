@@ -10,13 +10,13 @@ import (
 
 type Conn struct {
 	*websocket.Conn
-	id   string
-	room string
-	hub  chan *Message
+	id     string
+	roomId string
+	hub    chan *Message
 }
 
-func NewConn(conn *websocket.Conn, room string, hub chan *Message) *Conn {
-	return &Conn{conn, uuid.New(), room, hub}
+func NewConn(conn *websocket.Conn, roomId string, hub chan *Message) *Conn {
+	return &Conn{conn, uuid.New(), roomId, hub}
 }
 
 func (c *Conn) Send(msg *Message) {
@@ -36,7 +36,7 @@ func (c *Conn) Run() {
 			fmt.Fprintln(os.Stderr, err)
 		default:
 			msg.From = c.id
-			msg.Room = c.room
+			msg.Room = c.roomId
 			c.hub <- msg
 		}
 	}

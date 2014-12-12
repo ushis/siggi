@@ -18,6 +18,59 @@ make
 ./siggi -listen=:9000 -root=/srv/http
 ```
 
+## API
+
+Siggi relays JSON encoded messages between peers in the same room.
+
+To join a room open a WebSocket and specifiy the room.
+
+```js
+var socket = new WebSocket('ws://localhost:9000/socket?room=fancy-room-name');
+```
+
+To broadcast a message to all peers connected to the room, send a message
+without an recipient.
+
+```js
+socket.send(JSON.stringify({
+  type: 'hello',
+  data: 'arbitrary data'
+}));
+```
+
+To send a message to specific peer, add an recipient.
+
+```js
+socket.send(JSON.stringify({
+  type: 'hello',
+  to: 'recipient-id',
+  data: 'arbitrary data'
+}));
+```
+
+The recipient will receive the following message.
+
+```js
+{
+  type: 'hello',
+  from: 'sender-id',
+  to:   'recipient-id',
+  room: 'fancy-room-name',
+  data: 'arbitrary data'
+}
+```
+
+### Message Fields
+
+| Name | Contents         | Set By |
+|------|------------------|--------|
+| type | arbitrary string | sender |
+| from | sender id        | server |
+| to   | recipient id     | sender |
+| room | room id          | server |
+| data | arbitrary object | sender |
+
+
 ## License (GPL v2)
 
 ```

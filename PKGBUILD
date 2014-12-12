@@ -4,13 +4,13 @@ pkgver='0.0.0'
 pkgrel=1
 pkgdesc='WebRTC Signaling Server'
 arch=('x86_64' 'i686' 'armv6h')
-url='https://git.honkgong.info/ushi/siggi.git'
-license=('MIT')
+url='https://github.com/ushis/siggi'
+license=('GPL2')
 conflicts=('siggi')
 provides=('siggi')
 makedepends=('go')
 options=(!strip)
-source=('siggi::git+https://git.honkgong.info/ushi/siggi.git#branch=master')
+source=('siggi::git+https://github.com/ushis/siggi.git#branch=master')
 sha256sums=('SKIP')
 
 pkgver() {

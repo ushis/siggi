@@ -4,12 +4,9 @@ BIN := siggi
 .PHONY: all
 all: $(BIN)
 
-$(BIN): $(shell find src -name '*.go') deps
-	go build $(BIN)
-
-.PHONY: deps
-deps:
+$(BIN): $(shell find src -name '*.go')
 	go get -d -v $(BIN)/...
+	go build $(BIN)
 
 .PHONY: fmt
 fmt:

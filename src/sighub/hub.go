@@ -47,7 +47,7 @@ func (h *Hub) HTTPHandler() websocket.Handler {
 }
 
 func (h *Hub) connect(conn *websocket.Conn) {
-	c := NewConn(conn, conn.Config().Location.Query().Get("room"), h.msg)
+	c := NewConn(conn, h.msg)
 	h.reg <- c
 	c.Run()
 	h.rm <- c

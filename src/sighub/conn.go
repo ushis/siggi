@@ -15,8 +15,13 @@ type Conn struct {
 	hub    chan *Message
 }
 
-func NewConn(conn *websocket.Conn, roomId string, hub chan *Message) *Conn {
-	return &Conn{conn, uuid.New(), roomId, hub}
+func NewConn(conn *websocket.Conn, hub chan *Message) *Conn {
+	return &Conn{
+		conn,
+		uuid.New(),
+		conn.Config().Location.Query().Get("room"),
+		hub,
+	}
 }
 
 func (c *Conn) Send(msg *Message) {

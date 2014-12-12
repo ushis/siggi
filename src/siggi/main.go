@@ -32,6 +32,8 @@ func main() {
 	}
 	defer listener.Close()
 
+	fmt.Fprintf(os.Stderr, "Listening on %s\n", address)
+
 	hub := sighub.New()
 	go hub.Run()
 	defer hub.Die()

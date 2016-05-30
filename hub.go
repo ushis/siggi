@@ -1,4 +1,4 @@
-package sighub
+package main
 
 import (
 	"golang.org/x/net/websocket"
@@ -12,7 +12,7 @@ type Hub struct {
 	die   chan int
 }
 
-func New() *Hub {
+func NewHub() *Hub {
 	return &Hub{
 		make(map[string]Room),
 		make(chan *Message),

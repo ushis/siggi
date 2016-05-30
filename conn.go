@@ -1,7 +1,7 @@
-package sighub
+package main
 
 import (
-	"code.google.com/p/go-uuid/uuid"
+	"github.com/pborman/uuid"
 	"fmt"
 	"golang.org/x/net/websocket"
 	"io"

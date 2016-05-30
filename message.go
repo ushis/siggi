@@ -1,4 +1,4 @@
-package sighub
+package main
 
 type Message struct {
 	To   string      `json:"to"`

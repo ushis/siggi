@@ -7,15 +7,13 @@ It is used in production on https://gibbler.honkgong.info/
 ## Build
 
 ```
-git clone https://github.com/ushis/siggi.git
-cd siggi
-make
+go get github.com/ushis/siggi
 ```
 
 ## Run
 
 ```
-./siggi -listen=:9000 -root=/srv/http
+siggi -listen=:9000
 ```
 
 ## API

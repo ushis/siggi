@@ -1,4 +1,4 @@
-package sighub
+package main
 
 type Room map[string]*Conn
 

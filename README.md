@@ -53,7 +53,6 @@ The recipient will receive the following message.
   type: 'hello',
   from: 'sender-id',
   to:   'recipient-id',
-  room: 'fancy-room-name',
   data: 'arbitrary data'
 }
 ```
@@ -65,7 +64,6 @@ The recipient will receive the following message.
 | type | arbitrary string | sender |
 | from | sender id        | server |
 | to   | recipient id     | sender |
-| room | room id          | server |
 | data | arbitrary object | sender |
 
 

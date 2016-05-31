@@ -1,8 +1,8 @@
 package main
 
 import (
-	"github.com/pborman/uuid"
 	"fmt"
+	"github.com/pborman/uuid"
 	"golang.org/x/net/websocket"
 	"io"
 	"os"
@@ -10,18 +10,12 @@ import (
 
 type Conn struct {
 	*websocket.Conn
-	id     string
-	roomId string
-	hub    chan *Message
+	id   string
+	room *Room
 }
 
-func NewConn(conn *websocket.Conn, hub chan *Message) *Conn {
-	return &Conn{
-		conn,
-		uuid.New(),
-		conn.Config().Location.Query().Get("room"),
-		hub,
-	}
+func NewConn(conn *websocket.Conn, room *Room) *Conn {
+	return &Conn{conn, uuid.New(), room}
 }
 
 func (c *Conn) Send(msg *Message) {
@@ -31,8 +25,10 @@ func (c *Conn) Send(msg *Message) {
 }
 
 func (c *Conn) Run() {
+	msg := new(Message)
+
 	for {
-		msg := NewMessage()
+		msg.Clear()
 
 		switch err := websocket.JSON.Receive(c.Conn, msg); {
 		case err == io.EOF:
@@ -41,8 +37,7 @@ func (c *Conn) Run() {
 			fmt.Fprintln(os.Stderr, err)
 		default:
 			msg.From = c.id
-			msg.Room = c.roomId
-			c.hub <- msg
+			c.room.Send(msg)
 		}
 	}
 }

@@ -29,13 +29,7 @@ func main() {
 	}
 	defer l.Close()
 
-	fmt.Fprintf(os.Stderr, "listening on %s\n", listenAddr)
-
-	hub := NewHub()
-	go hub.Run()
-	defer hub.Die()
-
-	go http.Serve(l, hub.HTTPHandler())
+	go http.Serve(l, NewHub().HTTPHandler())
 
 	sig := make(chan os.Signal)
 	signal.Notify(sig, syscall.SIGINT, syscall.SIGTERM, syscall.SIGKILL)

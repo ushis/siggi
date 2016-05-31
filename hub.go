@@ -2,92 +2,49 @@ package main
 
 import (
 	"golang.org/x/net/websocket"
+	"sync"
 )
 
 type Hub struct {
-	rooms map[string]Room
-	msg   chan *Message
-	reg   chan *Conn
-	rm    chan *Conn
-	die   chan int
+	rooms map[string]*Room
+	mutex *sync.RWMutex
 }
 
 func NewHub() *Hub {
-	return &Hub{
-		make(map[string]Room),
-		make(chan *Message),
-		make(chan *Conn),
-		make(chan *Conn),
-		make(chan int),
-	}
-}
-
-func (h *Hub) Run() {
-	for {
-		select {
-		case msg := <-h.msg:
-			h.recv(msg)
-		case conn := <-h.reg:
-			h.register(conn)
-		case conn := <-h.rm:
-			h.closeConn(conn)
-		case <-h.die:
-			h.shutdown()
-			return
-		}
-	}
-}
-
-func (h *Hub) Die() {
-	h.die <- 1
+	return &Hub{make(map[string]*Room), &sync.RWMutex{}}
 }
 
 func (h *Hub) HTTPHandler() websocket.Handler {
 	return websocket.Handler(h.connect)
 }
 
-func (h *Hub) connect(conn *websocket.Conn) {
-	c := NewConn(conn, h.msg)
-	h.reg <- c
-	c.Run()
-	h.rm <- c
-}
-
-func (h *Hub) register(conn *Conn) {
-	room, ok := h.rooms[conn.roomId]
-
-	if !ok {
-		room = NewRoom()
-		h.rooms[conn.roomId] = room
-	}
+func (h *Hub) connect(ws *websocket.Conn) {
+	roomId := ws.Request().URL.Query().Get("room")
+	room := h.getOrCreateRoom(roomId)
+	conn := NewConn(ws, room)
 	room.Add(conn)
+	conn.Run()
+	room.Rm(conn)
+	h.cleanupRoom(roomId)
 }
 
-func (h *Hub) recv(msg *Message) {
-	if room, ok := h.rooms[msg.Room]; ok {
-		room.Send(msg)
+func (h *Hub) getOrCreateRoom(id string) *Room {
+	h.mutex.Lock()
+	defer h.mutex.Unlock()
+
+	if room, ok := h.rooms[id]; ok {
+		return room
 	}
-	msg.Free()
+	room := NewRoom()
+	h.rooms[id] = room
+	return room
 }
 
-func (h *Hub) closeConn(conn *Conn) {
-	conn.Close()
+func (h *Hub) cleanupRoom(id string) {
+	h.mutex.Lock()
+	defer h.mutex.Unlock()
 
-	if room, ok := h.rooms[conn.roomId]; ok {
-		room.Rm(conn)
-
-		if room.Len() == 0 {
-			delete(h.rooms, conn.roomId)
-		}
+	if room, ok := h.rooms[id]; ok && room.IsEmpty() {
+		delete(h.rooms, id)
 	}
-}
-
-func (h *Hub) shutdown() {
-	for _, room := range h.rooms {
-		room.Each(h.closeConn)
-	}
-	close(h.msg)
-	close(h.reg)
-	close(h.rm)
-	close(h.die)
 }

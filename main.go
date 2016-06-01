@@ -29,7 +29,10 @@ func main() {
 	}
 	defer l.Close()
 
-	go http.Serve(l, NewHub().HTTPHandler())
+	hub := NewHub()
+	defer hub.Close()
+
+	go http.Serve(l, hub.HTTPHandler())
 
 	sig := make(chan os.Signal)
 	signal.Notify(sig, syscall.SIGINT, syscall.SIGTERM, syscall.SIGKILL)

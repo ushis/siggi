@@ -52,6 +52,7 @@ func (r *Room) Close() {
 
 	for _, conn := range r.conns {
 		delete(r.conns, conn.id)
+		conn.Close()
 	}
 }
 

@@ -18,6 +18,16 @@ func (h *Hub) HTTPHandler() websocket.Handler {
 	return websocket.Handler(h.connect)
 }
 
+func (h *Hub) Close() {
+	h.mutex.Lock()
+	defer h.mutex.Unlock()
+
+	for id, room := range h.rooms {
+		delete(h.rooms, id)
+		room.Close()
+	}
+}
+
 func (h *Hub) connect(ws *websocket.Conn) {
 	roomId := ws.Request().URL.Query().Get("room")
 	room := h.getOrCreateRoom(roomId)
